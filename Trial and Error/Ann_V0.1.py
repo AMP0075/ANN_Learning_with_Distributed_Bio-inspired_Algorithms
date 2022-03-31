@@ -82,8 +82,8 @@ def one_D_mat_transpose(m):
     return matTransp
   
   
-  # ============== Actual Code Starts here =============== #
-  initialPopSize      = 8
+# ============== Actual Code Starts here =============== #
+initialPopSize      = 8
 allPop_Weights      = []
 allPopl_Chromosomes = []
 allPop_ReceivedOut  = []
