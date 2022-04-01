@@ -6,7 +6,6 @@
 #             3. Choice of activation function                                  -  giving an option to choose the activation function
 #             4. Seperate error functions                                       -  rather than hardcoding the Mean Square Error 
 #
-#
 
 import math
 import random
