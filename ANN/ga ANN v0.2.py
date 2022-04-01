@@ -1,14 +1,11 @@
 #💡⚡ TO DO - excluding multithreading 
 #
-#             1. Generalization of input                                       
-#                     ✅ 1.1 for any input data as CSV file
-#                         1.2 now optimize it using sklearn - OneHotEncoder or LabelEncoder
+#             1. Generalization of input                                        -  .✅ for any input data as CSV file                                        
+#                                                                                  . now optimize it using sklearn - OneHotEncoder or LabelEncoder
 #             2. Make sigmoid functions                                         -  rather than hard coding it 
 #             3. Choice of activation function                                  -  giving an option to choose the activation function
 #             4. Seperate error functions                                       -  rather than hardcoding the Mean Square Error 
 #
-#
-
 import math
 import random
 import numpy as np
