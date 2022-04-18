@@ -5,6 +5,8 @@ What I've learned about FFA
 2. [Firefly Algorithm Step-by-Step by **_Ritika xRay Pixy_** (YouTube)](https://www.youtube.com/watch?v=QvpEMR-Jp0U)
 3. [Firefly Algorithms for Multimodal Optimization by **_Xin-She Yang_**](https://sci-hub.se/https://link.springer.com/chapter/10.1007/978-3-642-04944-6_14)
 4. [Firefly Algorithm by **_Dr. Harish Garg_** (YouTube)](https://www.youtube.com/watch?v=QRtt_cJSMNk)
+5. [Detailed information about FFA](https://link.springer.com/book/10.1007/978-3-319-02141-6)
+
 # Assumptions / General Rules
 1. Fireflies can be attracted to each other. (Unisex)
 2. Attractiveness is proportional to BRIGHTNESS.
@@ -39,3 +41,21 @@ In simple words
 4. Check stopping criteria if (CurrentIteration = 1 to MaximumIteration).
 5. Update Position and Light Intensity for Each Firefly.
 6. Report the Best Solution.
+
+
+--------------------------------------
+Step 1:
+
+Population Size  = pop_size (n)
+
+MaximumIterations = max_iter
+
+Dimension = dims
+
+Upper Bound = upr_bound
+
+Lower Bound = lwr_bound
+
+
+![img_5.png](img_5.png)
+--------------------------------------
