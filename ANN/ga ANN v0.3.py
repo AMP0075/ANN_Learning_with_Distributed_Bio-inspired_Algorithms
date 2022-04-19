@@ -4,7 +4,7 @@
 #                                                      ✅ now optimize it using sklearn - OneHotEncoder or LabelEncoder or LabelBinarizer
 #             2. Make sigmoid functions             -  ✅ rather than hard coding it 
 #             3. Choice of activation function      -  giving an option to choose the activation function
-#             4. Seperate error functions           -  rather than hardcoding the Mean Square Error 
+#             4. Separate error functions           -  rather than hardcoding the Mean Square Error 
 #
 
 import math
@@ -242,13 +242,13 @@ class gaAnn():
         
         #~~~~ encoding ends~~~~#
         
-        for j in range(150):
+        for j in range(len(data)):
             output_values_expected.append(y[j])
         
         #print(output_values_expected)
         
         input_values = []
-        for j in range(150):
+        for j in range(len(data)):
             b = []
             for i in range(1, len(data.columns)-1):
                 b.append(data[data.columns[i]][j])
