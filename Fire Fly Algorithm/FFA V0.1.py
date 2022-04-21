@@ -1,26 +1,28 @@
-# 💡⚡ TODO - excluding multithreading
+# 💡⚡ TO DO - excluding multithreading
 #
 #             1. Generalization of input            -  ✅ for any input data as CSV file
-#                                                      ✅ now optimize it using sklearn - OneHotEncoder or LabelBinarizer
+#                                                      ✅ now optimize it using sklearn - OneHotEncoder or LabelEncoder or LabelBinarizer
 #             2. Make sigmoid functions             -  ✅ rather than hard coding it
 #             3. Choice of activation function      -  giving an option to choose the activation function
 #             4. Seperate error functions           -  rather than hardcoding the Mean Square Error
 #
 
 import math
-# import random
+import random
 import numpy as np
-from numpy.random import default_rng
 import pandas as pd
 # import seaborn as sns
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
-# from sklearn.preprocessing import LabelEncoder
-# from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelBinarizer
 from scipy.special import expit
 
+from numpy.random import default_rng
 
+
+# noinspection SpellCheckingInspection
 class ffaAnn():
 
     # ================== Activation Functions ================ #
@@ -87,7 +89,7 @@ class ffaAnn():
 
     def Eucledian(self, cord1, cord2):
         dist = 0.0
-        if (type(cord1) == int and type(cord2) == int):
+        if ((type(cord1) == int and type(cord2) == int) or ((type(cord1) == float and type(cord2) == float))):
             dist = math.pow((cord1 - cord2), 2)
         else:
             for i, j in zip(cord1, cord2):
@@ -97,7 +99,7 @@ class ffaAnn():
     def Manhattan(self, cord1, cord2):
         # |x1-y1| + |x2-y2| + |x3-y3| + ...
         dist = 0.0
-        if (type(cord1) == int and type(cord2) == int):
+        if ((type(cord1) == int and type(cord2) == int) or ((type(cord1) == float and type(cord2) == float))):
             dist = math.fabs(cord1 - cord2)
         else:
             for i, j in zip(cord1, cord2):
@@ -107,7 +109,7 @@ class ffaAnn():
     def MaximumDistance(self, cord1, cord2):
         # max(|x1-y1|, |x2-y2|, |x3-y3|, ...)
         dist = float('-inf')
-        if (type(cord1) == int and type(cord2) == int):
+        if ((type(cord1) == int and type(cord2) == int) or ((type(cord1) == float and type(cord2) == float))):
             dist = math.fabs(cord1 - cord2)
         else:
             for i, j in zip(cord1, cord2):
@@ -119,7 +121,7 @@ class ffaAnn():
     def MinimumDistance(self, cord1, cord2):
         # min(|x1-y1|, |x2-y2|, |x3-y3|, ...)
         dist = float('inf')
-        if (type(cord1) == int and type(cord2) == int):
+        if ((type(cord1) == int and type(cord2) == int) or ((type(cord1) == float and type(cord2) == float))):
             dist = math.fabs(cord1 - cord2)
         else:
             for i, j in zip(cord1, cord2):
@@ -130,7 +132,7 @@ class ffaAnn():
 
     def Chebishev(self, cord1, cord2, exponent_h):
         dist = 0.0
-        if (type(cord1) == int and type(cord2) == int):
+        if ((type(cord1) == int and type(cord2) == int) or ((type(cord1) == float and type(cord2) == float))):
             dist = math.pow((cord1 - cord2), exponent_h)
         else:
             for i, j in zip(cord1, cord2):
@@ -140,9 +142,9 @@ class ffaAnn():
 
     # =========== Distance Calculation Part Ends ============== #
 
-    def __init__(self, dimensions=(8, 5), initialPopSize=100, input_values=([10, 20, 30, 40], [1, 2, 3, 4]),
-                 output_values_expected=([0, 0, 1], [0, 1, 0]), iterations=10, gamma=0.001, beta_base=2,
-                 alpha=0.2, alpha_damp=0.99, delta=0.05, exponent=2, seed=None):
+    def __init__(self, dimensions=(8, 5),
+                 initialPopSize=10, iterations=10, gamma=0.001, beta_base=2,
+                 alpha=0.2, alpha_damp=0.99, delta=0.05, exponent=2, fileName="iris", seed=None):
 
         """
         Args:
@@ -174,114 +176,13 @@ class ffaAnn():
 
         self.fitness = []
 
-        # input and output
-        self.X = input_values[:]
-        self.Y = output_values_expected[:]
-
-        self.dimensions = dimensions
-        self.dimension = [len(self.X[0])]
-
-        for i in self.dimensions:
-            self.dimension.append(i)
-        self.dimension.append(len(self.Y[0]))
-
-        # print(self.dimension)
-
-        # ================ Finding Initial Weights ================ #
-
-        self.pop = []  # weights
-        for g in range(self.initialPopSize):
-            W = []
-            for i in range(len(self.dimension) - 1):
-                w = np.random.random((self.dimension[i + 1], self.dimension[i]))
-                W.append(w)
-            self.pop.append(W)
-
-        self.init_pop = []  # chromosomes or fireflies
-        for W in self.pop:
-            chromosome = []
-            for w in W:
-                chromosome.extend(w.ravel().tolist())
-            self.init_pop.append(chromosome)
-
-        # ================ Initial Weights Part Ends ================ #
-
-    # For FireFly Algorithm, Fitness can be found out by calculating the BRIGHTNESS (Mean Square Error in our case)
-
-    def Fitness(self, population):
-        # X, Y and pop are used
-        total_error = 0.0
-        self.fitness = []
-
-        for chromo in population:
-            # convert c -> m1, m2, ..., mn
-            m = []
-            k1 = 0
-            for i in range(len(self.dimension) - 1):
-                p = self.dimension[i]
-                q = self.dimension[i + 1]
-                k2 = k1 + p * q
-                mtemp = chromo[k1:k2]
-                m.append(np.reshape(mtemp, (p, q)))
-                k1 = k2
-
-            for x, y in zip(self.X, self.Y):
-
-                yo = x
-
-                for mCount in range(len(m)):
-                    yo = np.dot(yo, m[mCount])
-                    for yoCount in range(len(yo)):
-                        yo[yoCount] = (1 / (1 + math.exp(-yo[yoCount])))
-
-                total_error = 0
-
-                for i in range(len(yo)):
-                    total_error += ((yo[i] - y[i]) ** 2)
-
-            self.fitness.append(total_error)
-
-    # ======================= FFA Part =====================#
-
-    def UpdatePosition(self, population):
-        for fireflyCount1 in range(len(population)):
-            for fireflyCount2 in range(len(population)):
-                if(fireflyCount1 != fireflyCount2):
-                    if (self.fitness[fireflyCount2] > self.fitness[fireflyCount1]):
-                        # case in which 2nd firefly is more brighter
-                        # move less brighter firefly towards more brighter one
-                        # use the formula for update - x(t+1) = x(t) + beta * e^(-γ * (r^2)) * distance + α * ε
-
-                        distance = self.Eucledian(population[fireflyCount1], population[fireflyCount2])
-                        # distance = np.linalg.norm(self._position - better_position)
-
-                        # beta = beta0 * e^(-γ r^m)
-                        beta = self.beta_base * math.exp(-self.gamma * (distance ** self.exponent))
-                        attractiveness = beta * math.exp(-self.gamma * (distance ** 2))
-
-                        # attractiveness * (xj - xi)
-                        beta_firefly1 = attractiveness * (population[fireflyCount2] - population[fireflyCount1])
-                        population[fireflyCount1] += (beta_firefly1 + self.alpha * (self.rng.random(0, 1) - 0.5))
-                        break
-
-                    elif (self.fitness[fireflyCount2] == self.fitness[fireflyCount1]):
-                        # case in which both fireflies have equal brightness
-                        # random walk
-                        population[fireflyCount1] += (self.alpha * (self.rng.random(0, 1) - 0.5))
-                        population[fireflyCount2] += (self.alpha * (self.rng.random(0, 1) - 0.5))
-                        break
-
-        return population
-
-    # ==================== FFA definition part ends - iteration included in main function ================ #
-
-    def main(self, fileName="iris"):
-
         # ================== Input dataset and corresponding output ========================= #
 
-        fileName += ".csv"
-        data = pd.read_csv(fileName)
+        self.fileName = fileName
+        self.fileName += ".csv"
+        data = pd.read_csv(self.fileName)
 
+        classes = []
         output_values_expected = []
         input_values = []
 
@@ -306,6 +207,9 @@ class ffaAnn():
         for j in range(len(data)):
             output_values_expected.append(y[j])
 
+        # print(output_values_expected)
+
+        input_values = []
         for j in range(len(data)):
             b = []
             for i in range(1, len(data.columns) - 1):
@@ -315,7 +219,110 @@ class ffaAnn():
         self.X = input_values[:]
         self.Y = output_values_expected[:]
 
-        # ================== Input Ends ========================== #
+        # input and output
+        self.X = input_values[:]
+        self.Y = output_values_expected[:]
+
+        self.dimensions = dimensions
+        self.dimension = [len(self.X[0])]
+
+        for i in self.dimensions:
+            self.dimension.append(i)
+        self.dimension.append(len(self.Y[0]))
+
+        # print(self.dimension)
+
+        # ================ Finding Initial Weights ================ #
+
+        self.pop = []  # weights
+        for g in range(self.initialPopSize):
+            W = []
+            for i in range(len(self.dimension) - 1):
+                w = np.random.random((self.dimension[i + 1], self.dimension[i]))
+                W.append(w)
+            self.pop.append(W)
+
+        self.init_pop = []  # chromosomes
+        for W in self.pop:
+            chromosome = []
+            for w in W:
+                chromosome.extend(w.ravel().tolist())
+            self.init_pop.append(chromosome)
+
+        # ================ Initial Weights Part Ends ================ #
+
+    # For FireFly Algorithm, Fitness can be found out by calculating the BRIGHTNESS (Mean Square Error in our case)
+
+    def Fitness(self, population):
+        # X, Y and pop are used
+        self.fitness = []
+        for chromo in population:
+            # convert c -> m1, m2, ..., mn
+            total_error = 0
+            m = []
+            k1 = 0
+            for i in range(len(self.dimension) - 1):
+                p = self.dimension[i]
+                q = self.dimension[i + 1]
+                k2 = k1 + p * q
+                mtemp = chromo[k1:k2]
+                m.append(np.reshape(mtemp, (p, q)))
+                k1 = k2
+
+            for x, y in zip(self.X, self.Y):
+
+                yo = x
+
+                for mCount in range(len(m)):
+                    yo = np.dot(yo, m[mCount])
+                    yo = self.sigmoid(yo)
+
+                for i in range(len(yo)):
+                    total_error += ((yo[i] - y[i]) ** 2)
+
+            self.fitness.append(total_error)
+
+    # ======================= FFA Part =====================#
+
+    def UpdatePosition(self, population):
+        for fireflyCount1 in range(len(population)):
+            for fireflyCount2 in range(len(population)):
+                if (fireflyCount1 != fireflyCount2):
+                    if (self.fitness[fireflyCount2] > self.fitness[fireflyCount1]):
+                        # case in which 2nd firefly is more brighter
+                        # move less brighter firefly towards more brighter one
+                        # use the formula for update - x(t+1) = x(t) + beta * e^(-γ * (r^2)) * distance + α * ε
+
+                        distance = self.Eucledian(population[fireflyCount1], population[fireflyCount2])
+                        # distance = np.linalg.norm(self._position - better_position)
+
+                        # beta = beta0 * e^(-γ r^m)
+                        beta = self.beta_base * math.exp(-self.gamma * (distance ** self.exponent))
+                        attractiveness = beta * math.exp(-self.gamma * (distance ** 2))
+
+                        # attractiveness * (xj - xi)
+                        array1 = np.array(population[fireflyCount2])
+                        array2 = np.array(population[fireflyCount1])
+                        subtracted_array = np.subtract(array1, array2)
+
+                        beta_firefly1 = np.dot(attractiveness, subtracted_array)
+                        population[fireflyCount1] += (beta_firefly1 + self.alpha * (random.random() - 0.5))
+                        break
+
+                    elif (self.fitness[fireflyCount2] == self.fitness[fireflyCount1]):
+                        # case in which both fireflies have equal brightness
+                        # random walk
+                        population[fireflyCount1] += (self.alpha * (random.random() - 0.5))
+                        population[fireflyCount2] += (self.alpha * (random.random() - 0.5))
+                        break
+
+        return population
+
+    # ==================== FFA definition part ends - iteration included in main function ================ #
+
+    # ==================== FFA definition part ends - iteration included in main function ================ #
+
+    def main(self):
 
         # ================== FFA Methods ========================= #
 
@@ -340,26 +347,22 @@ class ffaAnn():
             # Step 3: Brightness
             population = self.UpdatePosition(population)
 
-            print(fitness[:10])
+            # print(fitness[:10])
             # print(population[:10])
 
             # Step 4: Changing Alpha for each iteration
             self.alpha *= self.alpha_damp
 
-
-
-        # print(population[0])  # best set of weights
+        print(population[0])  # best set of weights
         print(fitness[0])
 
 
-a = ffaAnn()  # Parameters - dimensions, initialPopSize, input_value, output_values_expected, iterations,
-# elicitation_rate, mutation_rate
+a = ffaAnn(fileName="../ANN/iris")
+# Parameters - dimensions, initialPopSize, iterations, elicitation_rate, mutation_rate
 
-# e.g. :-  a =  ffaAnn(dimensions = (8, 5), initialPopSize = 10, input_values = [[10,20,30,40], [1,2,3,4]],
-# output_values_expected = [[0, 0, 1], [0, 1, 0]], iterations = 10, elicitation_rate = 0.01, mutation_rate=0.0001)
+# For Example
+# a=gaAnn(dimensions = (8,5), initialPopSize = 10, iterations = 1, elicitation_rate = 0.01, mutation_rate=0.001, "iris")
 
-# If you want to use your own input and output values remove "Input dataset and corresponding output till GA Step1"
-# part from main method
+# If you want to use your own dataset, replace iris with corresponding csv file name
 
-a.main("../ANN/iris")  # a.main("filename") where filename is the name of csv file or dataset
-# or just use a.main()
+a.main()
