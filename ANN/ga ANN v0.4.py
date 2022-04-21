@@ -164,12 +164,18 @@ class gaAnn():
 
         # ================ Initial Weights Part Ends ================ #
 
+    def mean_square_error(self, expected, predicted):
+        total_error = 0.0
+        for i in range(len(predicted)):
+            total_error += ((predicted[i] - expected[i]) ** 2)
+        return total_error
+
     def Fitness(self, population):
         # X, Y and pop are used
         self.fitness = []
         for chromo in population:
             # convert c -> m1, m2, ..., mn
-            total_error = 0
+            total_error = 0.0
             m = []
             k1 = 0
             for i in range(len(self.dimension) - 1):
@@ -188,12 +194,11 @@ class gaAnn():
                     yo = np.dot(yo, m[mCount])
                     yo = self.sigmoid(yo)
 
-                total_error = 0
+                total_error += self.mean_square_error(yo, y)
 
-                for i in range(len(yo)):
-                    total_error += ((yo[i] - y[i]) ** 2)
 
             self.fitness.append(total_error)
+        # print(len(self.fitness))
 
         # ======================= GA Part =====================#
 
@@ -281,8 +286,8 @@ class gaAnn():
             population = children + bestPop
             population = population[:temp2]
 
-        # print(population[0]) #best set of weights
-        print(fitness[0])  # 0.9902909713503166
+        print("BEST SET OF WEIGHTS : \n", population[0])
+        print("Fitnees : ", fitness[0])
 
 
 a = gaAnn(fileName="iris")
