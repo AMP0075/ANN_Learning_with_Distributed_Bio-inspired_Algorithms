@@ -49,13 +49,13 @@ def threading(a, m, result):
     return a
 
 
-a = [int(np.random.random() * i) for i in range(1000000)]
+a = [int(np.random.random() * i) for i in range(10000000)]  # 10^7
 b = a[:]
 start_time = time.time()
 b.sort()
 maximum = b[-1]
 end_time = time.time()
-print(end_time - start_time)
+print("Time taken with sort function : ", end_time - start_time)  # nearly 2.5 seconds on my laptop
 m = 10
 chunk_size = len(a) / m
 result = [0] * m
@@ -69,4 +69,4 @@ else:
     k = "Failed"
 print(k)
 end_time = time.time()
-print(end_time - start_time)
+print("Time taken with threads : ", end_time - start_time)  # nearly 0.3 seconds on my laptop
