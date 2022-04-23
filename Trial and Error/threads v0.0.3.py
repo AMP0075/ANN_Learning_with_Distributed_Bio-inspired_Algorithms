@@ -49,7 +49,7 @@ def threading(a, m, result):
     return a
 
 
-a = [int((np.random.random() * 10000) % 10000) for i in range(10000000)]
+a = [int(np.random.random() * i) for i in range(1000000)]
 b = a[:]
 start_time = time.time()
 b.sort()
@@ -63,6 +63,10 @@ result = [0] * m
 start_time = time.time()
 a = threading(a, m, result)
 a.sort()
-print(a[-1])
+if(a[-1] == maximum):
+    k = "Successful"
+else:
+    k = "Failed"
+print(k)
 end_time = time.time()
 print(end_time - start_time)
