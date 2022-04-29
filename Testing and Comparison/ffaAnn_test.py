@@ -471,3 +471,4 @@ for initPop in range(100,1000,50):
     print(end_time-start_time)
     Pop_size_vs_time.append(end_time-start_time)
     Pop_size_vs_fitness.append(temp_fit)
+
