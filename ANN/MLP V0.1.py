@@ -1,9 +1,3 @@
-# TODO:
-#  1. Splitting of data for training and testing
-#  2. Training error,
-#  3. Testing error,
-#  4. Plots
-
 import math
 import numpy as np
 import pandas as pd
@@ -13,9 +7,15 @@ import pandas as pd
 # from sklearn.preprocessing import LabelEncoder
 # from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelBinarizer
+from sklearn import preprocessing
 from scipy.special import expit
 
 from numpy.random import default_rng
+
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+
+import matplotlib.pyplot as plt
 
 import time
 
@@ -159,6 +159,7 @@ class MultiLayerPerceptron():
         Args:
             dimensions : dimension of the neural network
             all_weights : the optimal weights we get from the bio-algoANN models
+            fileName : the name of the csv file for testing
         """
 
         self.allPop_Weights = []
@@ -235,16 +236,9 @@ class MultiLayerPerceptron():
 
         self.init_pop = self.all_weights
 
-        # ================ Initial Weights Part Ends ================ #
+    # ================ Initial Weights Part Ends ================ #
 
-    @staticmethod
-    def mean_square_error(expected, predicted):
-        total_error = 0.0
-        for i in range(len(predicted)):
-            total_error += ((predicted[i] - expected[i]) ** 2)
-        return (-total_error)
-
-    def Fitness(self, chromo):
+    def Predict(self, chromo):
         # X, Y and pop are used
         self.fitness = []
         total_error = 0
@@ -258,6 +252,7 @@ class MultiLayerPerceptron():
             m_arr.append(np.reshape(m_temp, (p, q)))
             k1 = k2
 
+        y_predicted = []
         for x, y in zip(self.X, self.Y):
 
             yo = x
@@ -266,24 +261,90 @@ class MultiLayerPerceptron():
                 yo = np.dot(yo, m_arr[mCount])
                 yo = self.sigmoid(yo)
 
-            for i in range(len(yo)):
-                total_error += self.mean_square_error(yo, y)
-
-        self.fitness.append(total_error)
+            # converting to sklearn acceptable form
+            max_yo = max(yo)
+            for y_vals in range(len(yo)):
+                if (yo[y_vals] == max_yo):
+                    yo[y_vals] = 1
+                else:
+                    yo[y_vals] = 0
+            y_predicted.append(yo)
+        return (y_predicted, self.Y)
 
     def main(self):
-        self.Fitness(self.init_pop)  # same as the fit values obtained via ffaANN
+        Y_PREDICT, Y_ACTUAL = self.Predict(self.init_pop)
+        Y_PREDICT = np.array(Y_PREDICT)
+        Y_ACTUAL = np.array(Y_ACTUAL)
+
+        n_classes = 3
+
+        label_binarizer = LabelBinarizer()
+        label_binarizer.fit(range(n_classes))
+        Y_PREDICT = label_binarizer.inverse_transform(np.array(Y_PREDICT))
+        Y_ACTUAL = label_binarizer.inverse_transform(np.array(Y_ACTUAL))
+        return (Y_PREDICT, Y_ACTUAL)
         # find training and testing error
 
 
+start_time = time.time()
+i = InputData(fileName="../ANN/iris")
+input_val, output_val = i.main()
+end_time = time.time()
+print("Time for inputting data : ", end_time - start_time)
+
 print("============ Calling FFA to get best weights ===============")
-a = ffaAnn(fileName="../ANN/iris", initialPopSize=10, iterations=10)
-fit, best_weights, dim = a.main()
-print("\n Fitness : ", fit, "\n Best Weights : ", best_weights, "\n Dimensions : ", dim)
+
+start_time = time.time()
+a = ffaAnn(initialPopSize=100, m=10, dimensions=[100, 10], input_values=input_val, output_values_expected=output_val,
+           iterations=100)
+
+fit, b, weights, dim = a.main()
+
+end_time = time.time()
+print("Time taken : ", end_time - start_time)
+
+print("\n Fitness : ", fit, "\n Best Weights : ", weights, "\n Dimensions : ", dim)
+
+x = b[:]
+z = [i for i in range(0, 100)]
+plt.plot(z, x)
+
+plt.title("Firefly Algorithm")
+plt.ylabel("Fitness")
+plt.xlabel("Time")
+end_time = time.time()
+print("Time Taken : ", end_time - start_time)
+
 print("\n\n============= MLP Program Begins ============")
 
 start_time = time.time()
-m = MultiLayerPerceptron(fileName="../ANN/iris", dimensions=dim, all_weights=best_weights)
-m.main()
+print("Training")
+m = MultiLayerPerceptron(fileName="../ANN/iris_train", dimensions=dim, all_weights=weights)
+Y_PREDICT, Y_ACTUAL = m.main()
+print("\n Actual / Expected", Y_ACTUAL)
+print("\n Predictions", Y_PREDICT)
+print("\n\nConfusion Matrix")
+print(confusion_matrix(Y_ACTUAL, Y_PREDICT))
+
+print("\n\nClassification Report")
+target_names = ['class 0', 'class 1', 'class 2']
+print(classification_report(Y_ACTUAL, Y_PREDICT, target_names=target_names))
+
+end_time = time.time()
+print("Time taken = ", end_time - start_time)
+
+start_time = time.time()
+print("Testing")
+m = MultiLayerPerceptron(fileName="../ANN/iris_train", dimensions=dim, all_weights=weights)
+Y_PREDICT, Y_ACTUAL = m.main()
+print("\n Actual / Expected", Y_ACTUAL)
+print("\n Predictions", Y_PREDICT)
+print("\n\nConfusion Matrix")
+print(confusion_matrix(Y_ACTUAL, Y_PREDICT))
+
+print("\n\nClassification Report")
+target_names = ['class 0', 'class 1', 'class 2']
+print(classification_report(Y_ACTUAL, Y_PREDICT, target_names=target_names))
+
 end_time = time.time()
 print("Time taken = ", end_time - start_time)

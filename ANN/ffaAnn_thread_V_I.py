@@ -1,5 +1,3 @@
-# code to support MLP V0.1.py
-
 import math
 import random
 import numpy as np
@@ -14,10 +12,76 @@ from scipy.special import expit
 
 from numpy.random import default_rng
 
+# noinspection SpellCheckingInspection
+
+from threading import Thread
 import time
 
 
-# noinspection SpellCheckingInspection
+class ThreadWithReturnValue(Thread):
+    def __init__(self, group=None, target=None, name=None,
+                 args=(), kwargs={}, Verbose=None):
+        Thread.__init__(self, group, target, name, args, kwargs)
+        self._return = None
+
+    def run(self):
+        # print(type(self._target))
+        # print(self._target)
+        if self._target is not None:
+            self._return = self._target(*self._args,
+                                        **self._kwargs)
+
+    def join(self, *args):
+        Thread.join(self, *args)
+        return self._return
+
+
+class InputData():
+    # input and output
+    # ================== Input dataset and corresponding output ========================= #
+    def __init__(self, fileName="iris"):
+        self.fileName = fileName
+        self.fileName += ".csv"
+        data = pd.read_csv(self.fileName)
+
+        output_values_expected = []
+        input_values = []
+
+        # ~~~~ encoding ~~~~#
+
+        # labelencoder = LabelEncoder()
+        # data[data.columns[-1]] = labelencoder.fit_transform(data[data.columns[-1]])
+
+        # one hot encoding - for multi-column
+        # enc = OneHotEncoder(handle_unknown='ignore')
+        # combinedData = np.vstack((data[data.columns[-2]], data[data.columns[-1]])).T
+        # print(combinedData)
+        # y = enc.fit_transform(combinedData).toarray()
+        # y = OneHotEncoder().fit_transform(combinedData).toarray()
+
+        y = LabelBinarizer().fit_transform(data[data.columns[-1]])
+        # print(y)
+
+        # ~~~~ encoding ends~~~~#
+
+        for j in range(len(data)):
+            output_values_expected.append(y[j])
+
+        # print(output_values_expected)
+
+        for j in range(len(data)):
+            b = []
+            for i in range(1, len(data.columns) - 1):
+                b.append(data[data.columns[i]][j])
+            input_values.append(b)
+
+        self.X = input_values[:]
+        self.Y = output_values_expected[:]
+
+    def main(self):
+        return (self.X, self.Y)
+
+
 class ffaAnn():
 
     # ================== Activation Functions ================ #
@@ -138,18 +202,18 @@ class ffaAnn():
     # =========== Distance Calculation Part Ends ============== #
 
     def __init__(self, dimensions=(8, 5),
-                 initialPopSize=10, iterations=10, gamma=0.001, beta_base=2,
-                 alpha=0.2, alpha_damp=0.99, delta=0.05, exponent=2, fileName="iris", seed=None):
+                 initialPopSize=10, iterations=10, gamma=0.001, beta_base=2.5,
+                 alpha=0.2, alpha_damp=0.97, delta=0.05, exponent=2, m=5,
+                 input_values=[], output_values_expected=[], seed=None):
 
         """
         Args:
-          ⚡ problem (dict): The problem dictionary
             n_iterations (int): maximum number of iterations, default = 10
             initialPopSize (int): number of population size, default = 100
             gamma (float): Light Absorption Coefficient, default = 0.001
             beta_base (float): Attraction Coefficient Base Value, default = 2
             alpha (float): Mutation Coefficient, default = 0.2
-            alpha_damp (float): Mutation Coefficient Damp Rate, default = 0.99
+            alpha_damp (float): Mutation Coefficient Damp Rate, default = 0.97
             delta (float): Mutation Step Size, default = 0.05
             exponent (int): Exponent (m in the paper), default = 2
         """
@@ -171,48 +235,7 @@ class ffaAnn():
 
         self.fitness = []
 
-        # ================== Input dataset and corresponding output ========================= #
-
-        self.fileName = fileName
-        self.fileName += ".csv"
-        data = pd.read_csv(self.fileName)
-
-        classes = []
-        output_values_expected = []
-        input_values = []
-
-        # ~~~~ encoding ~~~~#
-
-        # labelencoder = LabelEncoder()
-        # data[data.columns[-1]] = labelencoder.fit_transform(data[data.columns[-1]])
-
-        # one hot encoding - for multi-column
-        # enc = OneHotEncoder(handle_unknown='ignore')
-        # combinedData = np.vstack((data[data.columns[-2]], data[data.columns[-1]])).T
-        # print(combinedData)
-        # y = enc.fit_transform(combinedData).toarray()
-        # y = OneHotEncoder().fit_transform(combinedData).toarray()
-
-        #
-        y = LabelBinarizer().fit_transform(data[data.columns[-1]])
-        # print(y)
-
-        # ~~~~ encoding ends~~~~#
-
-        for j in range(len(data)):
-            output_values_expected.append(y[j])
-
-        # print(output_values_expected)
-
-        input_values = []
-        for j in range(len(data)):
-            b = []
-            for i in range(1, len(data.columns) - 1):
-                b.append(data[data.columns[i]][j])
-            input_values.append(b)
-
-        self.X = input_values[:]
-        self.Y = output_values_expected[:]
+        self.distribution_factor = m
 
         # input and output
         self.X = input_values[:]
@@ -233,7 +256,7 @@ class ffaAnn():
         for g in range(self.initialPopSize):
             W = []
             for i in range(len(self.dimension) - 1):
-                w = np.random.random((self.dimension[i + 1], self.dimension[i]))
+                w = np.random.randint(-90, 90, (self.dimension[i + 1], self.dimension[i]))
                 W.append(w)
             self.pop.append(W)
 
@@ -256,7 +279,7 @@ class ffaAnn():
 
     def Fitness(self, population):
         # X, Y and pop are used
-        self.fitness = []
+        fitness = []
         for chromo in population:
             # convert c -> m1, m2, ..., mn
             total_error = 0
@@ -281,13 +304,42 @@ class ffaAnn():
                 for i in range(len(yo)):
                     total_error += self.mean_square_error(yo, y)
 
-            self.fitness.append(total_error)
+            fitness.append(total_error)
+
+        return fitness
+
+    def parallel_fitness(self, population):
+        fitness_par = []
+        m = self.distribution_factor
+        chunk_size = len(population) / m
+        result = [0] * m
+
+        threads = []
+        start = 0
+        end = start + int(chunk_size)
+
+        for i in range(m):
+            b = population[start:end]
+            process = ThreadWithReturnValue(target=self.Fitness, args=[b])
+            process.start()
+            threads.append(process)
+            start = end
+            end = start + int(chunk_size)
+        i = 0
+        for process in threads:
+            result[i] = process.join()
+            i += 1
+        for i in result:
+            fitness_par.extend(i)
+        return fitness_par
 
     # ======================= FFA Part =====================#
 
     def UpdatePosition(self, population):
+        population = np.array(population)
+        # print("population before update - ",population)
         for fireflyCount1 in range(len(population)):
-            for fireflyCount2 in range(len(population)):
+            for fireflyCount2 in range(1 + fireflyCount1, len(population)):
                 if (fireflyCount1 != fireflyCount2):
                     if (self.fitness[fireflyCount2] > self.fitness[fireflyCount1]):
                         # case in which 2nd firefly is more brighter
@@ -298,8 +350,11 @@ class ffaAnn():
                         # distance = np.linalg.norm(self._position - better_position)
 
                         # beta = beta0 * e^(-γ r^m)
-                        beta = self.beta_base * math.exp(-self.gamma * (distance ** self.exponent))
-                        attractiveness = beta * math.exp(-self.gamma * (distance ** 2))
+                        beta = self.beta_base * math.exp(-self.gamma * (distance))
+                        attractiveness = beta * math.exp(-self.gamma * (distance))
+
+                        # print(beta)
+                        # print(attractiveness)
 
                         # attractiveness * (xj - xi)
                         array1 = np.array(population[fireflyCount2])
@@ -307,17 +362,52 @@ class ffaAnn():
                         subtracted_array = np.subtract(array1, array2)
 
                         beta_firefly1 = np.dot(attractiveness, subtracted_array)
-                        population[fireflyCount1] += (beta_firefly1 + self.alpha * (random.random() - 0.5))
+                        population[fireflyCount1] = np.add(population[fireflyCount1],
+                                                           (beta_firefly1 + self.alpha * (random.random() - 0.5)))
                         break
 
                     elif (self.fitness[fireflyCount2] == self.fitness[fireflyCount1]):
                         # case in which both fireflies have equal brightness
                         # random walk
-                        population[fireflyCount1] += (self.alpha * (random.random() - 0.5))
-                        population[fireflyCount2] += (self.alpha * (random.random() - 0.5))
+                        print("hi")
+                        population[fireflyCount1] = np.add(population[fireflyCount1],
+                                                           (self.alpha * (random.random() + 0.5)))
+                        population[fireflyCount2] = np.add(population[fireflyCount2],
+                                                           (self.alpha * (random.random() + 0.5)))
                         break
-
+        # print("population after update- ",population)
         return population
+
+    # if we split the data into multiple parts then fireflies in one chunk cannot be attracted to fireflies in another chunk,
+    # so those position updates wont be possible
+    # but we can assume that since attractive power decreases with distance so those flies won't be attracted much
+
+    # while running the code multiple times, it was found that the fitness improves on doing so
+
+    def parallel_updatePosition(self, population):
+        population_all = []
+        m = self.distribution_factor
+        chunk_size = len(population) / m
+        result = [0] * m
+
+        threads = []
+        start = 0
+        end = start + int(chunk_size)
+
+        for i in range(m):
+            b = population[start:end]
+            process = ThreadWithReturnValue(target=self.UpdatePosition, args=[b])
+            process.start()
+            threads.append(process)
+            start = end
+            end = start + int(chunk_size)
+        i = 0
+        for process in threads:
+            result[i] = process.join()
+            i += 1
+        for i in result:
+            population_all.extend(i.tolist())
+        return population_all
 
     # ==================== FFA definition part ends - iteration included in main function ================ #
 
@@ -331,22 +421,27 @@ class ffaAnn():
         population = self.init_pop
         iterations = 0
         fitness = []
+        best_per_gen = []
 
         while (iterations < self.n_iterations):  # Maximum Iteration Count = 100
-            # print("--------------GENERATION " + str(iterations) + "-----------")
+            print("--------------GENERATION " + str(iterations) + "-----------")
             iterations += 1
 
             # Step 2: Calculate Fitness
-            self.Fitness(population)
+            self.fitness = self.parallel_fitness(population)[:]
 
             # sorting population based on fitness
 
-            population = [x for y, x in sorted(zip(self.fitness, population))]
+            sorted_population = [x for y, x in sorted(zip(self.fitness, population))]
 
-            fitness = [x for x, y in sorted(zip(self.fitness, population))]
+            fitness = [x for x, y in sorted(zip(self.fitness, population))][:]
+
+            self.fitness = fitness[:]
+
+            best_per_gen.append(self.fitness[-1])
 
             # Step 3: Brightness
-            population = self.UpdatePosition(population)
+            population = self.parallel_updatePosition(sorted_population)[:]
 
             # print(fitness[:10])
             # print(population[:10])
@@ -354,19 +449,10 @@ class ffaAnn():
             # Step 4: Changing Alpha for each iteration
             self.alpha *= self.alpha_damp
 
-        population = [x for y, x in sorted(zip(fitness, population))]
-        fitness = [x for x, y in sorted(zip(fitness, population))]
-        # print(population[-1])
-        # print("Fitness : ",fitness[-1])
-        return (fitness[-1], population[-1], self.dimension)
+        sorted_population = [x for y, x in sorted(zip(self.fitness, population))]
 
+        fitness = [x for x, y in sorted(zip(self.fitness, population))]
 
-print("\n\n======================= FFA THREAD ======================")
-start_time = time.time()
-a = ffaAnn(fileName="../ANN/iris", iterations=10, initialPopSize=100)
-
-fitness, pop, dim = a.main()
-print("Fitness : ", fitness)
-end_time = time.time()
-print("Time Taken : ", end_time - start_time)
-print("=================== FFA Output Ends =====================\n\n")
+        # print(sorted_population[-1])
+        print("Fitness : ", fitness[-1])
+        return (fitness[-1], best_per_gen, sorted_population[-1], self.dimension)
