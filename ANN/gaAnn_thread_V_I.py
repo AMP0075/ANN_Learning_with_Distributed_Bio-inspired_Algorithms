@@ -140,7 +140,7 @@ class gaAnn():
     # ============ Activation Functions Part Ends ============= #
 
     def __init__(self, dimensions=(8, 5), initialPopSize=100, iterations=10, elicitation_rate=0.01,
-                 mutation_rate=0.0001, m = 10, bestCount = 50,
+                 mutation_rate=0.001, m = 10, bestCount = 50,
                 input_values=[] , output_values_expected=[]):
         self.initialPopSize = initialPopSize
         self.allPop_Weights = []
@@ -175,7 +175,7 @@ class gaAnn():
         for g in range(self.initialPopSize):
             W = []
             for i in range(len(self.dimension) - 1):
-                w = np.random.randint(-10, 10, (self.dimension[i + 1], self.dimension[i]))
+                w = np.random.randint(-100, 100, (self.dimension[i + 1], self.dimension[i]))
                 W.append(w)
             self.pop.append(W)
 
@@ -312,19 +312,19 @@ class gaAnn():
     
     # Mutation
     def mutation(self, bestPop):
-        mutRate = self.mutation_rate
-        while (int(mutRate) == 1):
+        mutRate = 1
+        temp = self.mutation_rate
+        while (int(temp) != 1):
+            temp *= 10
             mutRate *= 10
         chance = random.randint(1, int(mutRate) + 1)
         if (chance == mutRate):
-            i = random.randint(0, len(bestPop) - 1)  # Selecting a random string from the best population
-            print(i, len(bestPop))
-            k = random.randint(0, len(bestPop[i]) - 1)
-            t = random.randint(65, 90)
-            t = chr(t)
-            sol = list(bestPop[i])
+            i = random.randint(0, len(bestPop) - 1)    # Selecting a random chromosome from the best population
+            # print(i, len(bestPop))
+            k = random.randint(0, len(bestPop[i]) - 1) # Selecting a random gene position on the selected chromosome
+            t = random.randint(-100, 100)              # Selecting a random weight value - (as per line 178)
+            sol = bestPop[i]
             sol[k] = t
-            bestPop[i] = "".join(sol)
         return bestPop
 
     # ==================== GA definition part ends - iteration included in main function ================ #
