@@ -2,7 +2,8 @@ import math
 import numpy as np
 import pandas as pd
 # import seaborn as sns
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
 
 # from sklearn.preprocessing import LabelEncoder
 # from sklearn.preprocessing import OneHotEncoder
@@ -10,16 +11,12 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn import preprocessing
 from scipy.special import expit
 
-from numpy.random import default_rng
-
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
-import matplotlib.pyplot as plt
-
 import time
 
-from ffaAnn_thread_V_I import *
+from ffaAnn_thread_V_I import *     # replace with corresponding file
 
 
 class MultiLayerPerceptron():
@@ -159,7 +156,6 @@ class MultiLayerPerceptron():
         Args:
             dimensions : dimension of the neural network
             all_weights : the optimal weights we get from the bio-algoANN models
-            fileName : the name of the csv file for testing
         """
 
         self.allPop_Weights = []
@@ -238,6 +234,7 @@ class MultiLayerPerceptron():
 
     # ================ Initial Weights Part Ends ================ #
 
+
     def Predict(self, chromo):
         # X, Y and pop are used
         self.fitness = []
@@ -264,7 +261,7 @@ class MultiLayerPerceptron():
             # converting to sklearn acceptable form
             max_yo = max(yo)
             for y_vals in range(len(yo)):
-                if (yo[y_vals] == max_yo):
+                if(yo[y_vals] == max_yo):
                     yo[y_vals] = 1
                 else:
                     yo[y_vals] = 0
@@ -282,8 +279,17 @@ class MultiLayerPerceptron():
         label_binarizer.fit(range(n_classes))
         Y_PREDICT = label_binarizer.inverse_transform(np.array(Y_PREDICT))
         Y_ACTUAL = label_binarizer.inverse_transform(np.array(Y_ACTUAL))
-        return (Y_PREDICT, Y_ACTUAL)
-        # find training and testing error
+
+        # find error
+
+        print("\n Actual / Expected", Y_ACTUAL)
+        print("\n Predictions", Y_PREDICT)
+        print("\n\nConfusion Matrix")
+        print(confusion_matrix(Y_ACTUAL, Y_PREDICT))
+
+        print("\n\nClassification Report")
+        target_names = ['class 0', 'class 1', 'class 2']
+        print(classification_report(Y_ACTUAL, Y_PREDICT, target_names=target_names))
 
 
 start_time = time.time()
@@ -295,8 +301,7 @@ print("Time for inputting data : ", end_time - start_time)
 print("============ Calling FFA to get best weights ===============")
 
 start_time = time.time()
-a = ffaAnn(initialPopSize=100, m=10, dimensions=[100, 10], input_values=input_val, output_values_expected=output_val,
-           iterations=100)
+a = ffaAnn(initialPopSize=100, m=10, dimensions = [100,10], input_values=input_val, output_values_expected=output_val, iterations = 100)
 
 fit, b, weights, dim = a.main()
 
@@ -305,46 +310,32 @@ print("Time taken : ", end_time - start_time)
 
 print("\n Fitness : ", fit, "\n Best Weights : ", weights, "\n Dimensions : ", dim)
 
-x = b[:]
-z = [i for i in range(0, 100)]
-plt.plot(z, x)
+
+
+x=b[:]
+z=[i for i in range(0,100)]
+plt.plot(z,x)
 
 plt.title("Firefly Algorithm")
 plt.ylabel("Fitness")
-plt.xlabel("Time")
+plt.xlabel("Iterations")
 end_time = time.time()
 print("Time Taken : ", end_time - start_time)
+
 
 print("\n\n============= MLP Program Begins ============")
 
 start_time = time.time()
 print("Training")
 m = MultiLayerPerceptron(fileName="../ANN/iris_train", dimensions=dim, all_weights=weights)
-Y_PREDICT, Y_ACTUAL = m.main()
-print("\n Actual / Expected", Y_ACTUAL)
-print("\n Predictions", Y_PREDICT)
-print("\n\nConfusion Matrix")
-print(confusion_matrix(Y_ACTUAL, Y_PREDICT))
-
-print("\n\nClassification Report")
-target_names = ['class 0', 'class 1', 'class 2']
-print(classification_report(Y_ACTUAL, Y_PREDICT, target_names=target_names))
-
+m.main()
 end_time = time.time()
 print("Time taken = ", end_time - start_time)
 
 start_time = time.time()
 print("Testing")
-m = MultiLayerPerceptron(fileName="../ANN/iris_train", dimensions=dim, all_weights=weights)
-Y_PREDICT, Y_ACTUAL = m.main()
-print("\n Actual / Expected", Y_ACTUAL)
-print("\n Predictions", Y_PREDICT)
-print("\n\nConfusion Matrix")
-print(confusion_matrix(Y_ACTUAL, Y_PREDICT))
-
-print("\n\nClassification Report")
-target_names = ['class 0', 'class 1', 'class 2']
-print(classification_report(Y_ACTUAL, Y_PREDICT, target_names=target_names))
+m = MultiLayerPerceptron(fileName="../ANN/iris_test", dimensions=dim, all_weights=weights)
+m.main()
 
 end_time = time.time()
 print("Time taken = ", end_time - start_time)
