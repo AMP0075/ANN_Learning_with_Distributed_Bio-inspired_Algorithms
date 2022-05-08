@@ -3,8 +3,8 @@
 #             1. Generalization of input            -  ✅ for any input data as CSV file
 #                                                      ✅ now optimize it using sklearn - OneHotEncoder or LabelEncoder or LabelBinarizer
 #             2. Make sigmoid functions             -  ✅ rather than hard coding it
-#             3. Choice of activation function      -  giving an option to choose the activation function
-#             4. Seperate error functions           -  rather than hardcoding the Mean Square Error
+#             3. Choice of activation function      -  ✅ giving an option to choose the activation function
+#             4. Seperate error functions           -  ✅ rather than hardcoding the Mean Square Error
 #
 
 import math
