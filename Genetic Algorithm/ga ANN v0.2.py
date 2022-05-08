@@ -1,15 +1,20 @@
 #💡⚡ TO DO - excluding multithreading 
 #
-#             1. Generalization of input                                        -  . for any input data as CSV file
-#                                                                                  . optimize it using sklearn - OneHotEncoder or LabelEncoder
+#             1. Generalization of input                                        -  .✅ for any input data as CSV file                                        
+#                                                                                  . now optimize it using sklearn - OneHotEncoder or LabelEncoder
 #             2. Make sigmoid functions                                         -  rather than hard coding it 
 #             3. Choice of activation function                                  -  giving an option to choose the activation function
 #             4. Seperate error functions                                       -  rather than hardcoding the Mean Square Error 
 #
-
 import math
 import random
 import numpy as np
+import pandas as pd
+#import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 class gaAnn():
     def __init__(self, dimensions = (8, 5), initialPopSize = 10, input_values = [[10,20,30,40], [1,2,3,4]], output_values_expected = [[0, 0, 1], [0, 1, 0]], iterations = 10, elicitation_rate = 0.01, mutation_rate=0.0001):
@@ -51,7 +56,7 @@ class gaAnn():
             self.pop.append(W)
             
         self.init_pop =[]                                          # chromosomes
-        for W in pop:
+        for W in self.pop:
             chromosome = []
             for w in W :
                 chromosome.extend(w.ravel().tolist())
@@ -75,7 +80,6 @@ class gaAnn():
                 m.append(np.reshape(mtemp, (p, q)))
                 k1 = k2
                 
-            
             for x,y in zip(self.X, self.Y):
 
                 yo = x
@@ -90,7 +94,7 @@ class gaAnn():
                 for i in range(len(yo)):
                     total_error += ((yo[i] - y[i])**2)
                     
-            self.fitness.append(total_error)    
+            self.fitness.append(total_error)      
     
     
     
@@ -127,24 +131,68 @@ class gaAnn():
 
     # Mutation
     def mutation(self, bestPop):
-        mutRate = self.mutation_rate
-        while(int(mutRate)==1):
-            mutRate*=10
-        chance = random.randint(1,int(mutRate)+1)
-        if(chance == mutRate):
-            i = random.randint(0, len(bestPop)-1)                           # Selecting a random string from the best population
-            print(i, len(bestPop))
-            k = random.randint(0, len(bestPop[i])-1)
-            t = random.randint(65, 90)
-            t = chr(t)
-            sol = list(bestPop[i])
-            sol[k]=t
-            bestPop[i] = "".join(sol)
+        mutRate = 1
+        temp = self.mutation_rate
+        while (int(temp) != 1):
+            temp *= 10
+            mutRate *= 10
+        chance = random.randint(1, int(mutRate) + 1)
+        if (chance == mutRate):
+            i = random.randint(0, len(bestPop) - 1)    # Selecting a random chromosome from the best population
+            # print(i, len(bestPop))
+            k = random.randint(0, len(bestPop[i]) - 1) # Selecting a random gene position on the selected chromosome
+            t = random.randint(-100, 100)              # Selecting a random weight value - (as per line 178)
+            sol = bestPop[i]
+            sol[k] = t
         return bestPop
 
 # ==================== GA definition part ends - iteration included in main function ================ #
 
-    def main(self):
+    def main(self, fileName = "iris"):
+        
+        # ================== Input dataset and corresponding output ========================= #
+        
+        fileName += ".csv"
+        data = pd.read_csv(fileName)
+
+        classes = []
+        output_values_expected = []
+        input_values = []
+
+        #manual one hot encoding
+        # finding all classes and one hot encoding
+        c=0
+        for i in data[data.columns[-1]].unique():
+
+            s = len(data[data.columns[-1]].unique())
+            k = [0 for i in range(s)]
+            if(i in classes):
+                b = classes.index(i)
+                k[b] = 1
+            else:
+                k[c] = 1
+            classes.append([i,k])
+            c+=1
+
+        # output values as integers
+        for i in range(len(data[data.columns[-1]])):
+            for j in range(len(classes)):
+                if(classes[j][0] ==  data[data.columns[-1]][i]):
+                    output_values_expected.append(classes[j][1])
+                    break
+
+        input_values = []
+        for j in range(150):
+            b = []
+            for i in range(1, len(data.columns)-1):
+                b.append(data[data.columns[i]][j])
+            input_values.append(b)
+            
+        
+        self.X= input_values[:]
+        self.Y = output_values_expected[:]
+        
+        # ================== GA Methods ========================= #
         
         #Step 1: Initial Population
         population = self.init_pop
@@ -160,9 +208,9 @@ class gaAnn():
             
             # sorting population based on fitness
                         
-            population = [x for y, x in sorted(zip(self.fitness, population), reverse=True)]
+            population = [x for y, x in sorted(zip(self.fitness, population))]
             
-            fitness = [x for x, y in sorted(zip(self.fitness, population), reverse=True)]
+            fitness = [x for x, y in sorted(zip(self.fitness, population))]
 
             #print(fitness[:10])        
             #print(population[:10])
@@ -186,9 +234,9 @@ class gaAnn():
             population = population[:temp2]
         
         #print(population[0])
-        print(fitness[0])
+        #print(fitness[0])
         
         
 a=gaAnn()
 
-a.main()
+a.main() #say a.main(iris)
