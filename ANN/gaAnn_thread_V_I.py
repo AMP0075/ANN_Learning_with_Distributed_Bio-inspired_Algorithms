@@ -357,7 +357,7 @@ class gaAnn():
             self.fitness = fitness[:]
             population = sorted_population[:]
             
-            best_per_gen.append(fitness[-1])
+            best_per_gen.append(-fitness[-1])
             
             
             #print(len(population))
@@ -384,6 +384,6 @@ class gaAnn():
          
             
         # print("BEST SET OF WEIGHTS : \n", population[-1])
-        print("Fitness : ", fitness[-1])
-        return (fitness[-1], best_per_gen, sorted_population[-1], self.dimension)
+        print("Fitness : ", -fitness[-1])
+        return (-fitness[-1], best_per_gen, sorted_population[-1], self.dimension)
         # print(fitness[:101])

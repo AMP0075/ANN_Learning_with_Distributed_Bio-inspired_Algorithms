@@ -352,16 +352,16 @@ class psoAnn():
             print(fitness_x[-1])
             # print(fitness_g)
             if(type(fitness_g) == type([])):
-                best_per_gen.append(fitness_g[0])
+                best_per_gen.append(-(fitness_g[0]))
             else:
-                best_per_gen.append(fitness_g)
+                best_per_gen.append(-fitness_g)
 
 
 
-        print("Global : ", fitness_g) #global best
+        print("Global : ", -fitness_g[0]) #global best
         #print(self.gBest) #global best weights
 
 
         #print("Particle : ", self.fitness)#particle best fitness
         #print(self.pBest) #particle best  weights
-        return(fitness_g, best_per_gen, population_x, self.dimension)
+        return(fitness_g, best_per_gen, self.gBest, self.dimension)

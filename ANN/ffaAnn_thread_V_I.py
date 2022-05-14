@@ -438,7 +438,7 @@ class ffaAnn():
 
             self.fitness = fitness[:]
 
-            best_per_gen.append(self.fitness[-1])
+            best_per_gen.append(-self.fitness[-1])
 
             # Step 3: Brightness
             population = self.parallel_updatePosition(sorted_population)[:]
@@ -454,5 +454,5 @@ class ffaAnn():
         fitness = [x for x, y in sorted(zip(self.fitness, population))]
 
         # print(sorted_population[-1])
-        print("Fitness : ", fitness[-1])
+        print("Fitness : ", -fitness[-1])
         return (fitness[-1], best_per_gen, sorted_population[-1], self.dimension)
