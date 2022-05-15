@@ -436,6 +436,10 @@ class ffaAnn():
             sorted_population = [x for y, x in sorted(zip(self.fitness, population))]
 
             fitness = [x for x, y in sorted(zip(self.fitness, population))][:]
+            
+            if(iterations==1):
+                print("Initial worst fitness = ", -fitness[0], "\n\n Initial best fitness = ", -fitness[-1])
+            
 
             self.fitness = fitness[:]
 

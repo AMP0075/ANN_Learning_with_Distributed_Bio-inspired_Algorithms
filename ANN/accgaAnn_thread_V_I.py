@@ -355,6 +355,9 @@ class gaAnn():
 
             fitness = [x for x, y in sorted(zip(self.fitness, population))]
             
+            if(iterations==1):
+                print("Initial worst fitness = ", -fitness[0], "\n\n Initial best fitness = ", -fitness[-1])
+            
             self.fitness = fitness[:]
             population = sorted_population[:]
             

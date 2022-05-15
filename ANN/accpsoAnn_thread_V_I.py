@@ -325,6 +325,8 @@ class psoAnn():
         population_g = [x for y, x in sorted(zip(self.fitness, population))]
 
         fitness_g = [x for x, y in sorted(zip(self.fitness, population))]
+        
+        worst_fit = fitness_g[0]
 
         self.gBest = np.copy(population_g[-1])
         fitness_g = fitness_g[-1]
@@ -334,6 +336,8 @@ class psoAnn():
         population_x = np.copy(population)
         velocity_x = np.copy(velocity)
         fitness_x = np.copy(self.fitness)
+        
+        print("Initial worst fitness = ", -worst_fit, "\n\n Initial best fitness = ", -fitness_g)
 
 
         while (iterations < self.n_iterations):  # Maximum Iteration Count = 100
